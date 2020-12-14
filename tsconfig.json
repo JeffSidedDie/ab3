@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+      "module": "CommonJS",
+      "target": "ES2017",
+      "noImplicitAny": true,
+      "preserveConstEnums": true,
+      "outDir": "./src/handlers",
+      "sourceMap": true,
+      "strict": true,
+    },
+    "include": ["src/handlers_ts/**/*"],
+    "exclude": ["node_modules", "**/*.spec.ts"]
+  }

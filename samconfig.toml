@@ -1,0 +1,10 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "ab3-random-access"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-12bbon7y05wgs"
+s3_prefix = "ab3-random-access"
+region = "us-east-1"
+confirm_changeset = false
+capabilities = "CAPABILITY_IAM"

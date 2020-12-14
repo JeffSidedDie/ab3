@@ -1,0 +1,13 @@
+Bucket,Role,Event,Count
+"jeff-ab3-test-1","ab3-app-3",GetObject,20
+"jeff-ab3-test-1","ab3-app-3",ListObjects,7
+"jeff-ab3-test-1","ab3-app-2",GetObject,15
+"jeff-ab3-test-1","ab3-app-2",ListObjects,5
+"jeff-ab3-test-1","ab3-app-1",GetObject,5
+"jeff-ab3-test-1","ab3-app-1",ListObjects,2
+"jeff-ab3-test-2","ab3-app-2",GetObject,11
+"jeff-ab3-test-2","ab3-app-2",ListObjects,5
+"jeff-ab3-test-2","ab3-app-3",GetObject,10
+"jeff-ab3-test-2","ab3-app-3",ListObjects,3
+"jeff-ab3-test-2","ab3-app-1",GetObject,5
+"jeff-ab3-test-2","ab3-app-1",ListObjects,3

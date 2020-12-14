@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: >-
+  ab3
+
+Transform:
+- AWS::Serverless-2016-10-31
+
+Resources:
+
+  AB3AccessRandomS3ObjectLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: A Lambda function randomly accesses an object in a random bucket.
+      Runtime: nodejs12.x
+      CodeUri: src/handlers/ab3-access-random-s3-object.js
+      Handler: ab3-access-random-s3-object.handler
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/ab3-access-random-s3-object-lambda
+      Events:
+        CloudWatchEvent:
+          Type: Schedule
+          Properties:
+            Schedule: cron(* * * * ? *)
+      MemorySize: 128
+      Timeout: 60
+
+  ProcessKibanaExport:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Processes Kibana User Access Table export into IAM policies.
+      Runtime: nodejs12.x
+      CodeUri: src/handlers/process-kibana-export.js
+      Handler: process-kibana-export.handler
+      MemorySize: 512
+      Timeout: 300
+      Environment:
+        Variables:
+          EXPORT_BUCKET: !Sub arn:aws:s3:::ab3-${AWS::AccountId}-kibana-exports
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - 's3:ListBucket'
+                - 's3:Get*'
+                - 's3:PutObject'
+              Resource:
+                - !Sub arn:aws:s3:::ab3-${AWS::AccountId}-kibana-exports
+                - !Sub arn:aws:s3:::ab3-${AWS::AccountId}-kibana-exports/*
+      Events:
+        BucketEvent1:
+          Type: S3
+          Properties:
+            Bucket: !Ref KibanaExportsBucket
+            Events:
+              - 's3:ObjectCreated:*'
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: suffix
+                    Value: .csv
+  
+  KibanaExportsBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub "ab3-${AWS::AccountId}-kibana-exports"
+      BucketEncryption: 
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: "AES256"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
