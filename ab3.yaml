@@ -1,0 +1,685 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Metadata:
+  Generator: "former2"
+
+Description: ""
+
+Resources:
+  TestBucket1:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-${AWS::AccountId}-test-1"
+      BucketEncryption: 
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: "AES256"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  TestBucket2:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-${AWS::AccountId}-test-2"
+      BucketEncryption: 
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: "AES256"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  TestAppRole1:
+    DependsOn: RandomAccessorLambdaRole
+    Type: AWS::IAM::Role
+    Properties:
+      Path: "/"
+      RoleName: !Sub "${AWS::StackName}-app-1"
+      AssumeRolePolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "arn:aws:iam::${AWS::AccountId}:role/ab3-access-random-s3-object-lambda"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+      MaxSessionDuration: 3600
+      Policies:
+        - PolicyName: root
+          PolicyDocument: |
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": "s3:*",
+                        "Resource": "*"
+                    }
+                ]
+            }
+      Description: "Test app role for random-accessor lambda."
+
+  TestAppRole2:
+    DependsOn: RandomAccessorLambdaRole
+    Type: AWS::IAM::Role
+    Properties:
+      Path: "/"
+      RoleName: !Sub "${AWS::StackName}-app-2"
+      AssumeRolePolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "arn:aws:iam::${AWS::AccountId}:role/ab3-access-random-s3-object-lambda"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+      MaxSessionDuration: 3600
+      Policies:
+        - PolicyName: root
+          PolicyDocument: |
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": "s3:*",
+                        "Resource": "*"
+                    }
+                ]
+            }
+      Description: "Test app role for random-accessor lambda."
+
+  TestAppRole3:
+    DependsOn: RandomAccessorLambdaRole
+    Type: AWS::IAM::Role
+    Properties:
+      Path: "/"
+      RoleName: !Sub "${AWS::StackName}-app-3"
+      AssumeRolePolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "arn:aws:iam::${AWS::AccountId}:role/ab3-access-random-s3-object-lambda"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+      MaxSessionDuration: 3600
+      Policies:
+        - PolicyName: root
+          PolicyDocument: |
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": "s3:*",
+                        "Resource": "*"
+                    }
+                ]
+            }
+      Description: "Test app role for random-accessor lambda."
+
+  RandomAccessorLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: "/"
+      RoleName: !Sub "${AWS::StackName}-access-random-s3-object-lambda"
+      AssumeRolePolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+      MaxSessionDuration: 3600
+      Policies:
+        - PolicyName: root
+          PolicyDocument: !Sub |
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "sts:AssumeRole"
+                        ],
+                        "Resource": [
+                            "arn:aws:iam::${AWS::AccountId}:role/${AWS::StackName}-app-1",
+                            "arn:aws:iam::${AWS::AccountId}:role/${AWS::StackName}-app-2",
+                            "arn:aws:iam::${AWS::AccountId}:role/${AWS::StackName}-app-3"
+                        ]
+                    }
+                ]
+            }
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Description: "Test app role for random-accessor lambda."
+
+  TrailBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-${AWS::AccountId}-cloudtrail-s3-access-logging"
+      BucketEncryption: 
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: "AES256"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  TrailBucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref TrailBucket
+      PolicyDocument: !Sub |
+          {
+              "Version": "2012-10-17",
+              "Statement": [
+                  {
+                      "Sid": "AWSCloudTrailAclCheck20150319",
+                      "Effect": "Allow",
+                      "Principal": {
+                          "Service": "cloudtrail.amazonaws.com"
+                      },
+                      "Action": "s3:GetBucketAcl",
+                      "Resource": "${TrailBucket.Arn}"
+                  },
+                  {
+                      "Sid": "AWSCloudTrailWrite20150319",
+                      "Effect": "Allow",
+                      "Principal": {
+                          "Service": "cloudtrail.amazonaws.com"
+                      },
+                      "Action": "s3:PutObject",
+                      "Resource": "${TrailBucket.Arn}/AWSLogs/${AWS::AccountId}/*",
+                      "Condition": {
+                          "StringEquals": {
+                              "s3:x-amz-acl": "bucket-owner-full-control"
+                          }
+                      }
+                  }
+              ]
+          }
+
+  Trail:
+    DependsOn: TrailBucketPolicy
+    Type: "AWS::CloudTrail::Trail"
+    Properties:
+      TrailName: !Sub "${AWS::StackName}-s3-access-logging"
+      S3BucketName: !Ref TrailBucket
+      IncludeGlobalServiceEvents: true
+      IsMultiRegionTrail: true
+      EnableLogFileValidation: true
+      IsLogging: true
+      EventSelectors:
+        - IncludeManagementEvents: false
+          ReadWriteType: All
+          DataResources:
+            - Type: AWS::S3::Object
+              Values:
+                - !Sub ${TestBucket1.Arn}/
+                - !Sub ${TestBucket2.Arn}/
+
+  EventsRule:
+    Type: "AWS::Events::Rule"
+    Properties:
+      Name: !Sub "${AWS::StackName}-s3-access-logs-to-firehose"
+      Description: "Sends S3 events from CloudTrail to Firehose."
+      EventPattern: !Sub "{\"source\":[\"aws.s3\"],\"detail-type\":[\"AWS API Call via CloudTrail\"],\"detail\":{\"eventSource\":[\"s3.amazonaws.com\"],\"eventName\":[\"ListObjects\",\"ListObjectVersions\",\"PutObject\",\"GetObject\",\"HeadObject\",\"CopyObject\",\"GetObjectAcl\",\"PutObjectAcl\",\"CreateMultipartUpload\",\"ListParts\",\"UploadPart\",\"CompleteMultipartUpload\",\"AbortMultipartUpload\",\"UploadPartCopy\",\"RestoreObject\",\"DeleteObject\",\"DeleteObjects\",\"GetObjectTorrent\",\"SelectObjectContent\",\"PutObjectLockRetention\",\"PutObjectLockLegalHold\",\"GetObjectLockRetention\",\"GetObjectLockLegalHold\"],\"requestParameters\":{\"bucketName\":[\"${TestBucket1}\",\"${TestBucket2}\"]}}}"
+      State: "ENABLED"
+      Targets: 
+        - Arn: !GetAtt FirehoseStream.Arn
+          Id: Firehose
+          RoleArn: !GetAtt EventsRuleRole.Arn
+      EventBusName: "default"
+
+  EventsRuleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: "/service-role/"
+      RoleName: "Amazon_EventBridge_Invoke_Firehose_525029262"
+      AssumeRolePolicyDocument: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"events.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns: 
+        - !Ref EventsRuleRolePolicy
+
+  EventsRuleRolePolicy:
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      ManagedPolicyName: Amazon_EventBridge_Invoke_Firehose_525029262
+      Path: "/service-role/"
+      PolicyDocument: !Sub |
+          {
+              "Version": "2012-10-17",
+              "Statement": [
+                  {
+                      "Effect": "Allow",
+                      "Action": [
+                          "firehose:PutRecord",
+                          "firehose:PutRecordBatch"
+                      ],
+                      "Resource": [
+                          "${FirehoseStream.Arn}"
+                      ]
+                  }
+              ]
+          }
+
+  FirehoseStream:
+    Type: "AWS::KinesisFirehose::DeliveryStream"
+    Properties:
+      DeliveryStreamName: !Sub "${AWS::StackName}-access-logs-stream"
+      DeliveryStreamType: "DirectPut"
+      DeliveryStreamEncryptionConfigurationInput: 
+        KeyType: "AWS_OWNED_CMK"
+      ElasticsearchDestinationConfiguration: 
+        BufferingHints: 
+          IntervalInSeconds: 300
+          SizeInMBs: 5
+        CloudWatchLoggingOptions: 
+          Enabled: true
+          LogGroupName: !Sub "/aws/kinesisfirehose/${AWS::StackName}-access-logs-stream"
+          LogStreamName: "ElasticsearchDelivery"
+        DomainARN: !GetAtt ElasticsearchDomain.Arn
+        IndexName: "s3-access-logs"
+        IndexRotationPeriod: "NoRotation"
+        ProcessingConfiguration: 
+          Enabled: false
+        RetryOptions: 
+          DurationInSeconds: 300
+        RoleARN: !GetAtt FirehoseServiceRole.Arn
+        S3BackupMode: "FailedDocumentsOnly"
+        S3Configuration: 
+          BucketARN: !GetAtt FirehoseFailureBucket.Arn
+          BufferingHints: 
+            SizeInMBs: 5
+            IntervalInSeconds: 300
+          CloudWatchLoggingOptions: 
+            Enabled: true
+            LogGroupName: !Sub "/aws/kinesisfirehose/${AWS::StackName}-access-logs-stream"
+            LogStreamName: "S3Delivery"
+          CompressionFormat: "GZIP"
+          EncryptionConfiguration: 
+            KMSEncryptionConfig: 
+              AWSKMSKeyARN: !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/s3"
+          Prefix: ""
+          RoleARN: !GetAtt FirehoseServiceRole.Arn
+
+  FirehoseFailureBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-${AWS::AccountId}-firehose-failures"
+
+  FirehoseServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: "/service-role/"
+      RoleName: !Sub "KinesisFirehoseServiceRole-${AWS::StackName}-access-lo-${AWS::Region}-${AWS::AccountId}"
+      AssumeRolePolicyDocument: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"firehose.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns: 
+        - !Ref FirehoseServiceRolePolicy
+
+  FirehoseServiceRolePolicy:
+    DependsOn: ElasticsearchDomain
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      ManagedPolicyName: !Sub "KinesisFirehoseServicePolicy-${AWS::StackName}-access-logs-stream-${AWS::Region}"
+      Path: "/service-role/"
+      PolicyDocument: !Sub |
+          {
+              "Version": "2012-10-17",
+              "Statement": [
+                  {
+                      "Sid": "",
+                      "Effect": "Allow",
+                      "Action": [
+                          "s3:AbortMultipartUpload",
+                          "s3:GetBucketLocation",
+                          "s3:GetObject",
+                          "s3:ListBucket",
+                          "s3:ListBucketMultipartUploads",
+                          "s3:PutObject"
+                      ],
+                      "Resource": [
+                          "arn:aws:s3:::${FirehoseFailureBucket}",
+                          "arn:aws:s3:::${FirehoseFailureBucket}/*"
+                      ]
+                  },
+                  {
+                      "Sid": "",
+                      "Effect": "Allow",
+                      "Action": [
+                          "lambda:InvokeFunction",
+                          "lambda:GetFunctionConfiguration"
+                      ],
+                      "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+                  },
+                  {
+                      "Effect": "Allow",
+                      "Action": [
+                          "kms:GenerateDataKey",
+                          "kms:Decrypt"
+                      ],
+                      "Resource": [
+                          "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/s3"
+                      ],
+                      "Condition": {
+                          "StringEquals": {
+                              "kms:ViaService": "s3.${AWS::Region}.amazonaws.com"
+                          },
+                          "StringLike": {
+                              "kms:EncryptionContext:aws:s3:arn": [
+                                  "arn:aws:s3:::${FirehoseFailureBucket}/*"
+                              ]
+                          }
+                      }
+                  },
+                  {
+                      "Sid": "",
+                      "Effect": "Allow",
+                      "Action": [
+                          "ec2:DescribeVpcs",
+                          "ec2:DescribeVpcAttribute",
+                          "ec2:DescribeSubnets",
+                          "ec2:DescribeSecurityGroups",
+                          "ec2:DescribeNetworkInterfaces",
+                          "ec2:CreateNetworkInterface",
+                          "ec2:CreateNetworkInterfacePermission",
+                          "ec2:DeleteNetworkInterface"
+                      ],
+                      "Resource": "*"
+                  },
+                  {
+                      "Sid": "",
+                      "Effect": "Allow",
+                      "Action": [
+                          "es:DescribeElasticsearchDomain",
+                          "es:DescribeElasticsearchDomains",
+                          "es:DescribeElasticsearchDomainConfig",
+                          "es:ESHttpPost",
+                          "es:ESHttpPut"
+                      ],
+                      "Resource": [
+                          "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${ElasticsearchDomain}",
+                          "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${ElasticsearchDomain}/*"
+                      ]
+                  },
+                  {
+                      "Sid": "",
+                      "Effect": "Allow",
+                      "Action": [
+                          "es:ESHttpGet"
+                      ],
+                      "Resource": [
+                          "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${ElasticsearchDomain}/_all/_settings",
+                          "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${ElasticsearchDomain}/_cluster/stats",
+                          "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${ElasticsearchDomain}/s3-access-logs/_mapping/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%",
+                          "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${ElasticsearchDomain}/_nodes",
+                          "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${ElasticsearchDomain}/_nodes/*/stats",
+                          "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${ElasticsearchDomain}/_stats",
+                          "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${ElasticsearchDomain}/s3-access-logs/_stats"
+                      ]
+                  },
+                  {
+                      "Sid": "",
+                      "Effect": "Allow",
+                      "Action": [
+                          "logs:PutLogEvents"
+                      ],
+                      "Resource": [
+                          "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/kinesisfirehose/${AWS::StackName}-access-logs-stream:log-stream:*"
+                      ]
+                  },
+                  {
+                      "Sid": "",
+                      "Effect": "Allow",
+                      "Action": [
+                          "kinesis:DescribeStream",
+                          "kinesis:GetShardIterator",
+                          "kinesis:GetRecords",
+                          "kinesis:ListShards"
+                      ],
+                      "Resource": "arn:aws:kinesis:${AWS::Region}:${AWS::AccountId}:stream/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+                  },
+                  {
+                      "Effect": "Allow",
+                      "Action": [
+                          "kms:Decrypt"
+                      ],
+                      "Resource": [
+                          "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+                      ],
+                      "Condition": {
+                          "StringEquals": {
+                              "kms:ViaService": "kinesis.${AWS::Region}.amazonaws.com"
+                          },
+                          "StringLike": {
+                              "kms:EncryptionContext:aws:kinesis:arn": "arn:aws:kinesis:${AWS::Region}:${AWS::AccountId}:stream/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+                          }
+                      }
+                  }
+              ]
+          }
+
+  ElasticsearchDomain:
+    DependsOn: CognitoUserPoolDomain
+    Type: "AWS::Elasticsearch::Domain"
+    Properties:
+      DomainName: !Sub ${AWS::StackName}-es
+      ElasticsearchVersion: "7.9"
+      ElasticsearchClusterConfig: 
+        DedicatedMasterEnabled: false
+        InstanceCount: 1
+        InstanceType: "r5.large.elasticsearch"
+        ZoneAwarenessEnabled: false
+        WarmEnabled: false
+      AccessPolicies: !Sub "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"${CognitoAuthRole.Arn}\"},\"Action\":\"es:*\",\"Resource\":\"arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${AWS::StackName}-es/*\"}]}"
+      SnapshotOptions: {}
+      EncryptionAtRestOptions: 
+        Enabled: true
+      NodeToNodeEncryptionOptions: 
+        Enabled: true
+      AdvancedOptions: 
+        "rest.action.multi.allow_explicit_index": "true"
+      EBSOptions: 
+        EBSEnabled: true
+        VolumeType: "gp2"
+        VolumeSize: 10
+      CognitoOptions: 
+        Enabled: true
+        UserPoolId: !Ref CognitoUserPool
+        IdentityPoolId: !Ref CognitoIdentityPool
+        RoleArn: !GetAtt ElasticsearchCognitoRole.Arn
+      DomainEndpointOptions: 
+        EnforceHTTPS: true
+        TLSSecurityPolicy: "Policy-Min-TLS-1-0-2019-07"
+        CustomEndpointEnabled: false
+      AdvancedSecurityOptions: 
+        Enabled: false
+        InternalUserDatabaseEnabled: false
+
+  CognitoIdentityPool:
+    Type: "AWS::Cognito::IdentityPool"
+    Properties:
+      IdentityPoolName: !Sub "${AWS::StackName}_identities"
+      AllowUnauthenticatedIdentities: false
+
+  CognitoIdentityPoolRoleAttachment:
+    Type: "AWS::Cognito::IdentityPoolRoleAttachment"
+    Properties:
+      IdentityPoolId: !Ref CognitoIdentityPool
+      Roles:
+        authenticated: !GetAtt CognitoAuthRole.Arn
+        unauthenticated: !GetAtt CognitoUnauthRole.Arn
+
+  CognitoAuthRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: "/"
+      RoleName: !Sub "${AWS::StackName}-es-cognito-auth"
+      AssumeRolePolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Federated": "cognito-identity.amazonaws.com"
+              },
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "cognito-identity.amazonaws.com:aud": "${CognitoIdentityPool}"
+                },
+                "ForAnyValue:StringLike": {
+                  "cognito-identity.amazonaws.com:amr": "authenticated"
+                }
+              }
+            }
+          ]
+        }
+      MaxSessionDuration: 3600
+      Policies:
+        - PolicyName: cognito
+          PolicyDocument: |
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "mobileanalytics:PutEvents",
+                            "cognito-sync:*",
+                            "cognito-identity:*"
+                        ],
+                        "Resource": [
+                            "*"
+                        ]
+                    }
+                ]
+            }
+      Description: "Assumed role for ES Cognito auth"
+
+  CognitoUnauthRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      RoleName: !Sub "${AWS::StackName}-es-cognito-unauth"
+      AssumeRolePolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Federated": "cognito-identity.amazonaws.com"
+              },
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "cognito-identity.amazonaws.com:aud": "${CognitoIdentityPool}"
+                },
+                "ForAnyValue:StringLike": {
+                  "cognito-identity.amazonaws.com:amr": "unauthenticated"
+                }
+              }
+            }
+          ]
+        }
+      MaxSessionDuration: 3600
+      Policies:
+        - PolicyName: cognito
+          PolicyDocument: |
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "mobileanalytics:PutEvents",
+                            "cognito-sync:*"
+                        ],
+                        "Resource": [
+                            "*"
+                        ]
+                    }
+                ]
+            }
+
+  CognitoUserPool:
+    Type: "AWS::Cognito::UserPool"
+    Properties:
+      UserPoolName: !Sub "${AWS::StackName}-users"
+      Policies: 
+        PasswordPolicy: 
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          TemporaryPasswordValidityDays: 7
+      AutoVerifiedAttributes: 
+        - "email"
+      MfaConfiguration: "OFF"
+      EmailConfiguration: 
+        EmailSendingAccount: "COGNITO_DEFAULT"
+      AdminCreateUserConfig: 
+        AllowAdminCreateUserOnly: false
+      AccountRecoverySetting: 
+        RecoveryMechanisms: 
+          - Priority: 1
+            Name: "verified_email"
+          - Priority: 2
+            Name: "verified_phone_number"
+      UsernameConfiguration: 
+        CaseSensitive: false
+      VerificationMessageTemplate: 
+        DefaultEmailOption: "CONFIRM_WITH_CODE"
+      UsernameAttributes:
+        - email
+
+  CognitoUserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Sub ${AWS::StackName}-${AWS::AccountId}
+      UserPoolId: !Ref CognitoUserPool
+
+  ElasticsearchCognitoRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/service-role/"
+      RoleName: "CognitoAccessForAmazonES"
+      AssumeRolePolicyDocument: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"es.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns: 
+        - "arn:aws:iam::aws:policy/AmazonESCognitoAccess"
+      Description: "Amazon Elasticsearch role for Kibana authentication."
